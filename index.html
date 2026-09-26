@@ -1,175 +1,99 @@
-<!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AddodanteHub | Innovative Digital Solutions & Applications</title>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: '#f0fdf4',
-              100: '#dcfce7',
-              500: '#1a7930',
-              600: '#156327',
-              700: '#114f1f',
-              800: '#0d3d18',
-              900: '#092a11',
-            }
-          }
-        }
-      }
+<!-- 1. Include Supabase JS SDK in head -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  // Replace with your actual credentials from Supabase Dashboard > Project Settings > API
+  const SUPABASE_URL = 'https://YOUR_SUPABASE_PROJECT_ID.supabase.co';
+  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+  
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  let activeTeacher = null;
+  let enteredPin = "";
+
+  // PIN Keypad Handlers
+  function pressPinKey(num) {
+    if (enteredPin.length < 4) {
+      enteredPin += num;
+      updatePinDots();
     }
-  </script>
-</head>
-<body class="bg-slate-900 text-slate-100 font-sans antialiased selection:bg-brand-500 selection:text-white">
+    if (enteredPin.length === 4) {
+      verifyTeacherPin(enteredPin);
+    }
+  }
 
-  <!-- Navigation Bar -->
-  <header class="fixed top-0 inset-x-0 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 z-50">
-    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-      <div class="flex items-center gap-2">
-        <div class="w-9 h-9 bg-brand-600 rounded-xl flex items-center justify-center font-black text-white text-lg shadow-lg shadow-brand-600/30">
-          A
-        </div>
-        <span class="font-black text-lg tracking-tight text-white">Addodante<span class="text-brand-500">Hub</span></span>
-      </div>
-      <nav class="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-300">
-        <a href="#home" class="hover:text-brand-400 transition-colors">Home</a>
-        <a href="#products" class="hover:text-brand-400 transition-colors">Products & Apps</a>
-        <a href="#services" class="hover:text-brand-400 transition-colors">Services</a>
-        <a href="#contact" class="hover:text-brand-400 transition-colors">Contact</a>
-      </nav>
-      <div>
-        <a href="#contact" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-md transition-all">Get in Touch</a>
-      </div>
-    </div>
-  </header>
+  function clearPin() {
+    enteredPin = "";
+    document.getElementById('pinError').innerText = "";
+    updatePinDots();
+  }
 
-  <!-- Hero Section -->
-  <section id="home" class="pt-32 pb-20 md:pt-44 md:pb-32 px-6 max-w-6xl mx-auto text-center">
-    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-400 text-xs font-bold mb-6">
-      ✨ Powering Next-Gen Digital Software
-    </div>
-    <h1 class="text-4xl md:text-6xl font-black tracking-tight text-white max-w-3xl mx-auto leading-tight">
-      Building Smart Solutions for <span class="text-brand-500">Modern Businesses</span>
-    </h1>
-    <p class="mt-6 text-slate-400 text-base md:text-lg max-w-2xl mx-auto font-normal">
-      AddodanteHub creates robust web applications, streamlined school registries, and custom digital layouts designed for efficiency and speed.
-    </p>
-    <div class="mt-8 flex flex-wrap justify-center gap-4">
-      <a href="#products" class="px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm rounded-xl shadow-lg transition-all">Explore Our Apps</a>
-      <a href="#services" class="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm rounded-xl border border-slate-700 transition-all">Our Services</a>
-    </div>
-  </section>
+  function updatePinDots() {
+    for (let i = 0; i < 4; i++) {
+      const dot = document.getElementById(`dot${i}`);
+      dot.className = i < enteredPin.length 
+        ? 'w-4 h-4 rounded-full bg-emerald-400 border border-emerald-400 shadow' 
+        : 'w-4 h-4 rounded-full border border-slate-600 bg-slate-800';
+    }
+  }
 
-  <!-- Products & Apps Section -->
-  <section id="products" class="py-20 bg-slate-950/50 border-y border-slate-800/80 px-6">
-    <div class="max-w-6xl mx-auto">
-      <div class="text-center max-w-xl mx-auto mb-16">
-        <h2 class="text-xs font-black uppercase tracking-widest text-brand-500 mb-2">Portfolio</h2>
-        <h3 class="text-3xl font-black text-white">Successfully Developed Apps</h3>
-        <p class="text-sm text-slate-400 mt-2">Discover our core software products tailored for real-world utility.</p>
-      </div>
+  // Direct Supabase Database PIN Authentication
+  async function verifyTeacherPin(pin) {
+    const errBox = document.getElementById('pinError');
+    errBox.innerText = "Authenticating...";
 
-      <div class="grid md:grid-cols-2 gap-8">
-        <!-- App 1: School Registry -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 md:p-8 flex flex-col justify-between hover:border-brand-500/50 transition-all group">
-          <div>
-            <div class="w-12 h-12 bg-brand-600/20 rounded-xl flex items-center justify-center text-brand-400 text-xl font-bold mb-4 border border-brand-500/30">
-              📋
-            </div>
-            <h4 class="text-xl font-extrabold text-white group-hover:text-brand-400 transition-colors">School Registry System</h4>
-            <p class="text-sm text-slate-400 mt-2 leading-relaxed">
-              A streamlined, cloud-synced school attendance tracking and pupil directory system featuring secure PIN authentication, class management, and automated CSV reports.
-            </p>
-          </div>
-          <div class="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between text-xs font-bold text-brand-400">
-            <span>Active Product</span>
-            <span class="bg-brand-500/10 px-2.5 py-1 rounded-lg border border-brand-500/20">Web App</span>
-          </div>
-        </div>
+    try {
+      const { data: teacher, error } = await supabaseClient
+        .from('teachers')
+        .select('*')
+        .eq('pin', pin)
+        .single();
 
-        <!-- App 2: Custom Web & UI Layouts -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 md:p-8 flex flex-col justify-between hover:border-brand-500/50 transition-all group">
-          <div>
-            <div class="w-12 h-12 bg-brand-600/20 rounded-xl flex items-center justify-center text-brand-400 text-xl font-bold mb-4 border border-brand-500/30">
-              💻
-            </div>
-            <h4 class="text-xl font-extrabold text-white group-hover:text-brand-400 transition-colors">Web Development & Layouts</h4>
-            <p class="text-sm text-slate-400 mt-2 leading-relaxed">
-              Custom responsive website projects, specialized UI layouts, and digital document styling engineered with modern web standards and high performance.
-            </p>
-          </div>
-          <div class="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between text-xs font-bold text-brand-400">
-            <span>Custom Solutions</span>
-            <span class="bg-brand-500/10 px-2.5 py-1 rounded-lg border border-brand-500/20">Full-Stack</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+      if (error || !teacher) {
+        throw new Error("Invalid PIN. Access denied.");
+      }
 
-  <!-- Services Section -->
-  <section id="services" class="py-20 px-6 max-w-6xl mx-auto">
-    <div class="text-center max-w-xl mx-auto mb-16">
-      <h2 class="text-xs font-black uppercase tracking-widest text-brand-500 mb-2">Expertise</h2>
-      <h3 class="text-3xl font-black text-white">What We Offer</h3>
-      <p class="text-sm text-slate-400 mt-2">Delivering dependable technical solutions from concept to deployment.</p>
-    </div>
+      // Store teacher profile in session
+      activeTeacher = teacher;
+      sessionStorage.setItem('active_teacher', JSON.stringify(teacher));
 
-    <div class="grid md:grid-cols-3 gap-6">
-      <div class="bg-slate-900/60 p-6 rounded-2xl border border-slate-800">
-        <div class="text-2xl mb-3">⚡</div>
-        <h4 class="font-bold text-white text-base mb-1">App Engineering</h4>
-        <p class="text-xs text-slate-400 leading-relaxed">Building lightweight, responsive web tools focused on speed and practical day-to-day use.</p>
-      </div>
-      <div class="bg-slate-900/60 p-6 rounded-2xl border border-slate-800">
-        <div class="text-2xl mb-3">🎨</div>
-        <h4 class="font-bold text-white text-base mb-1">Digital Design</h4>
-        <p class="text-xs text-slate-400 leading-relaxed">Precise layout structuring, template customization, and user-friendly interface design.</p>
-      </div>
-      <div class="bg-slate-900/60 p-6 rounded-2xl border border-slate-800">
-        <div class="text-2xl mb-3">🔒</div>
-        <h4 class="font-bold text-white text-base mb-1">Secure Systems</h4>
-        <p class="text-xs text-slate-400 leading-relaxed">Implementing robust client-side authentication, role control, and reliable data organization.</p>
-      </div>
-    </div>
-  </section>
+      document.getElementById('loginModal').classList.add('hidden');
+      applySession();
+    } catch (err) {
+      errBox.innerText = err.message;
+      setTimeout(clearPin, 800);
+    }
+  }
 
-  <!-- Contact Section -->
-  <section id="contact" class="py-20 bg-slate-950/80 border-t border-slate-800 px-6">
-    <div class="max-w-2xl mx-auto text-center">
-      <h2 class="text-3xl font-black text-white mb-3">Let's Build Together</h2>
-      <p class="text-sm text-slate-400 mb-8">Have a project in mind or want to collaborate with AddodanteHub? Reach out to us directly.</p>
-      
-      <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 text-left space-y-4">
-        <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1">Your Name</label>
-          <input type="text" placeholder="Enter your name" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-xs text-white focus:outline-none focus:ring-2 focus:ring-brand-500">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1">Email Address</label>
-          <input type="email" placeholder="Enter your email" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-xs text-white focus:outline-none focus:ring-2 focus:ring-brand-500">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-300 mb-1">Message</label>
-          <textarea rows="4" placeholder="Tell us about your project..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-xs text-white focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
-        </div>
-        <button type="button" onclick="alert('Thank you! Your message has been noted.')" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl shadow-lg transition-all">
-          Send Message
-        </button>
-      </div>
-    </div>
-  </section>
+  function applySession() {
+    if (!activeTeacher) return;
+    document.getElementById('activeTeacherText').innerText = activeTeacher.name;
+    document.getElementById('drawerTeacherName').innerText = activeTeacher.name;
+    document.getElementById('activeClassTag').innerText = activeTeacher.class_assigned;
 
-  <!-- Footer -->
-  <footer class="py-8 bg-slate-950 border-t border-slate-900 text-center text-xs text-slate-500">
-    <p>&copy; 2026 AddodanteHub. All rights reserved.</p>
-  </footer>
+    const select = document.getElementById('classSelect');
+    if (activeTeacher.class_assigned !== 'ALL') {
+      select.value = activeTeacher.class_assigned;
+      select.disabled = true; // Restrict standard teachers to their assigned class
+    } else {
+      select.disabled = false; // Admins can switch between classes
+    }
+  }
 
-</body>
-</html>
+  function logoutTeacher() {
+    activeTeacher = null;
+    sessionStorage.removeItem('active_teacher');
+    clearPin();
+    document.getElementById('loginModal').classList.remove('hidden');
+  }
+
+  // Restore session on refresh
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = sessionStorage.getItem('active_teacher');
+    if (saved) {
+      activeTeacher = JSON.parse(saved);
+      document.getElementById('loginModal').classList.add('hidden');
+      applySession();
+    }
+  });
+</script>
